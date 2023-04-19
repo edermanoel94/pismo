@@ -1,0 +1,34 @@
+name: Test
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
+      - name: Install Table Parse
+        run: go install github.com/mfridman/tparse@latest
+      - name: Run tests
+        run: go test -json -cover ./... | tparse -all -pass
+
+  linter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
+      - name: GolangCI lint
+        uses: golangci/golangci-lint-action@v3
+      - name: Run linter
+        run: golangci-lint run -v --timeout 60s
