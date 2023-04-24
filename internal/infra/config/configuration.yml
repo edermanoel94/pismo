@@ -1,12 +1,12 @@
 server:
-  addr: :8080
+  addr: 0.0.0.0:8080
   debug: false
   timeout:
     read-seconds: 15
     write-seconds: 20
 
 db:
-  host: localhost
+  host: db
   user: postgres
   password: pismo
   name: pismo

@@ -4,18 +4,17 @@ services:
     build:
       context: .
       dockerfile: ./build/package/local/Dockerfile
+    ports:
+      - "8080:8080"
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; /app/pismo'
+    depends_on:
+      - db
   db:
     container_name: pismo_db
-    restart: always
     image: postgres
     ports:
-      - 5432:5432
+      - "5432:5432"
     environment:
       POSTGRES_PASSWORD: pismo
     volumes:
       - ./sql/01-create-database.sql:/docker-entrypoint-initdb.d/01-create-database.sql
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8080:8080

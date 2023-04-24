@@ -11,9 +11,9 @@ var config = viper.New()
 
 func Init() *viper.Viper {
 	config.AddConfigPath(".")
-	config.AddConfigPath("app/internal/infra/config/")
+	config.AddConfigPath("/app/internal/infra/config/")
 	config.SetConfigName("configuration")
-	config.SetConfigType("yml")
+	config.SetConfigType("yaml")
 
 	if err := config.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
@@ -30,7 +30,7 @@ func Init() *viper.Viper {
 
 func setConfigDefaults() {
 
-	config.SetDefault("server.addr", ":8080")
+	config.SetDefault("server.addr", "0.0.0.0:8080")
 	config.SetDefault("server.timeout.read-seconds", "15")
 	config.SetDefault("server.timeout.write-seconds", "20")
 	config.SetDefault("server.debug", true)
