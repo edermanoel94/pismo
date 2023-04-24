@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"github.com/edermanoel94/pismo/internal/infra/config"
+)
 
 func main() {
-	fmt.Println("Hello, Pismo!")
+
+	config.Init()
 }
