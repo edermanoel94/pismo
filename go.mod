@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
+	github.com/akyoto/cache v1.0.6
 	github.com/go-playground/validator/v10 v10.12.0
 	github.com/labstack/echo/v4 v4.10.2
 	github.com/sirupsen/logrus v1.9.0

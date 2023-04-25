@@ -3,7 +3,6 @@ package data
 import (
 	"github.com/edermanoel94/pismo/internal/domain"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type TransactionRepository interface {
@@ -11,16 +10,6 @@ type TransactionRepository interface {
 }
 
 func NewTransactionRepository(db *gorm.DB) *Repository {
-
-	operationTypes := []*domain.OperationType{
-		{Description: "COMPRA A VISTA"},
-		{Description: "COMPRA PARCELADA"},
-		{Description: "SAQUE"},
-		{Description: "PAGAMENTO"},
-	}
-
-	db.Clauses(clause.OnConflict{DoNothing: true}).Create(operationTypes)
-
 	return &Repository{
 		db: db,
 	}
