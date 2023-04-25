@@ -8,18 +8,18 @@ type Account struct {
 	Transactions   []Transaction
 }
 
-type Transaction struct {
-	ID            uint `gorm:"primaryKey"`
-	Amount        float64
-	OperationType OperationType
-	EventDate     time.Time
-
-	AccountID uint
-}
-
 type OperationType struct {
 	ID          uint   `gorm:"primaryKey"`
 	Description string `gorm:"unique"`
 
-	TransactionID uint
+	Transaction Transaction
+}
+
+type Transaction struct {
+	ID        uint `gorm:"primaryKey"`
+	Amount    float64
+	EventDate time.Time `gorm:"autoCreateTime;<-:create"`
+
+	AccountID       uint
+	OperationTypeID uint
 }

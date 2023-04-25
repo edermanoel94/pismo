@@ -24,8 +24,8 @@ func New() (*gorm.DB, error) {
 
 	if err := db.AutoMigrate(
 		&domain.Account{},
-		&domain.Transaction{},
 		&domain.OperationType{},
+		&domain.Transaction{},
 	); err != nil {
 		return nil, err
 	}

@@ -4,6 +4,9 @@ import (
 	"github.com/edermanoel94/pismo/internal/api/account"
 	ad "github.com/edermanoel94/pismo/internal/api/account/data"
 	at "github.com/edermanoel94/pismo/internal/api/account/transport"
+	"github.com/edermanoel94/pismo/internal/api/transaction"
+	td "github.com/edermanoel94/pismo/internal/api/transaction/data"
+	tt "github.com/edermanoel94/pismo/internal/api/transaction/transport"
 	"github.com/edermanoel94/pismo/internal/infra/database"
 	"github.com/edermanoel94/pismo/internal/infra/server"
 )
@@ -18,11 +21,14 @@ func Start() error {
 		return err
 	}
 
-	accRepository := ad.NewAccountRepository(db)
+	accountRepository := ad.NewAccountRepository(db)
+	transactionRepository := td.NewTransactionRepository(db)
 
-	accService := account.New(accRepository)
+	accountService := account.New(accountRepository)
+	transactionService := transaction.New(transactionRepository)
 
-	at.NewHTTP(accService, s)
+	at.NewHTTP(accountService, s)
+	tt.NewHTTP(transactionService, s)
 
 	server.Start(s)
 
