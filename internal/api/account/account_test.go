@@ -4,8 +4,10 @@ import (
 	"errors"
 	"github.com/edermanoel94/pismo/internal/api/account/dto"
 	"github.com/edermanoel94/pismo/internal/domain"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 	"testing"
 )
 
@@ -30,6 +32,7 @@ func TestAccount_Create(t *testing.T) {
 		accountRequest dto.AccountRequest
 		accountInput   domain.Account
 		accountOutput  domain.Account
+		errOutput      error
 		expectedErr    error
 	}{
 		{
@@ -44,6 +47,21 @@ func TestAccount_Create(t *testing.T) {
 				DocumentNumber: "1238123812",
 			},
 			nil,
+			nil,
+		},
+		{
+			"error duplicate keys",
+			dto.AccountRequest{
+				DocumentNumber: "1238123812",
+			},
+			domain.Account{
+				DocumentNumber: "1238123812",
+			},
+			domain.Account{
+				DocumentNumber: "1238123812",
+			},
+			&pgconn.PgError{Code: "23505"},
+			gorm.ErrDuplicatedKey,
 		},
 		{
 			"error to create account",
@@ -55,6 +73,7 @@ func TestAccount_Create(t *testing.T) {
 			},
 			domain.Account{},
 			errors.New("error to create account"),
+			errors.New("error to create account"),
 		},
 	}
 
@@ -64,7 +83,7 @@ func TestAccount_Create(t *testing.T) {
 
 			mockAccountRepository := new(mockAccountRepository)
 
-			mockAccountRepository.On("Create", tc.accountInput).Return(tc.accountOutput, tc.expectedErr)
+			mockAccountRepository.On("Create", tc.accountInput).Return(tc.accountOutput, tc.errOutput)
 
 			accountService := Account{
 				repository: mockAccountRepository,

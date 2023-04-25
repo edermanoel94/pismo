@@ -2,6 +2,7 @@ package data
 
 import (
 	"github.com/edermanoel94/pismo/internal/domain"
+	"github.com/edermanoel94/pismo/internal/infra/config"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -12,11 +13,12 @@ type OperationTypeRepository interface {
 
 func NewOperationTypeRepository(db *gorm.DB) *Repository {
 
-	operationTypes := []*domain.OperationType{
-		{Description: "COMPRA A VISTA"},
-		{Description: "COMPRA PARCELADA"},
-		{Description: "SAQUE"},
-		{Description: "PAGAMENTO"},
+	operationTypesMap := config.Config().GetStringMapString("operation_types")
+
+	operationTypes := make([]*domain.OperationType, 0)
+
+	for k := range operationTypesMap {
+		operationTypes = append(operationTypes, &domain.OperationType{Description: k})
 	}
 
 	db.Clauses(clause.OnConflict{DoNothing: true}).Create(operationTypes)

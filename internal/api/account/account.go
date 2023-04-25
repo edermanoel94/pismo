@@ -4,7 +4,9 @@ import (
 	"github.com/edermanoel94/pismo/internal/api/account/data"
 	"github.com/edermanoel94/pismo/internal/api/account/dto"
 	"github.com/edermanoel94/pismo/internal/domain"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 type Account struct {
@@ -41,9 +43,13 @@ func (a *Account) Create(request dto.AccountRequest) (dto.AccountResponse, error
 	})
 
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"request": request,
-		}).Error(err)
+
+		logrus.WithFields(logrus.Fields{"request": request}).Error(err)
+
+		if err, ok := err.(*pgconn.PgError); ok && err.Code == "23505" {
+			return dto.AccountResponse{}, gorm.ErrDuplicatedKey
+		}
+
 		return dto.AccountResponse{}, err
 	}
 

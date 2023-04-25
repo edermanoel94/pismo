@@ -3,6 +3,7 @@ package operationtype
 import (
 	"github.com/akyoto/cache"
 	"github.com/edermanoel94/pismo/internal/api/operation_type/data"
+	"github.com/edermanoel94/pismo/internal/infra/config"
 	"time"
 )
 
@@ -15,7 +16,19 @@ type OperationType struct {
 	cache      *cache.Cache
 }
 
+func New(repository data.OperationTypeRepository) *OperationType {
+	return &OperationType{
+		repository: repository,
+		cache:      cache.New(1 * time.Hour),
+	}
+}
+
 type Indexed map[int]string
+
+func IsBalanceNegative(operationTypeName string) bool {
+	operationTypesMap := config.Config().GetStringMapString("operation_types")
+	return operationTypesMap[operationTypeName] == "-"
+}
 
 func (o *OperationType) FindAll() (Indexed, error) {
 
@@ -23,7 +36,7 @@ func (o *OperationType) FindAll() (Indexed, error) {
 		return operationTypes.(Indexed), nil
 	}
 
-	indexes := make(map[int]string)
+	indexes := make(Indexed)
 
 	result, err := o.repository.List()
 

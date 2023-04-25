@@ -17,7 +17,7 @@ To build the source code, enter the root project folder and execute:
 make build
 ```
 
-### Container
+### Run inside a container
 
 ```bash
 make start-docker
@@ -47,6 +47,12 @@ db:
   user: postgres
   password: pismo
   name: pismo
+ 
+operation_types:
+  COMPRA_A_VISTA: "-"
+  COMPRA_PARCELADA: "-"
+  SAQUE: "-"
+  PAGAMENTO: "+"
 ```
 
 ### Folders Structure

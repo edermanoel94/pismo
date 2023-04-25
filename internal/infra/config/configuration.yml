@@ -10,3 +10,9 @@ db:
   user: postgres
   password: pismo
   name: pismo
+
+operation_types:
+  COMPRA_A_VISTA: "-"
+  COMPRA_PARCELADA: "-"
+  SAQUE: "-"
+  PAGAMENTO: "+"

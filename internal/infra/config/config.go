@@ -40,6 +40,11 @@ func setConfigDefaults() {
 	config.SetDefault("db.password", "pismo")
 	config.SetDefault("db.name", "pismo")
 
+	config.SetDefault("operation_types.COMPRA_A_VISTA", "-")
+	config.SetDefault("operation_types.COMPRA_PARCELADA", "-")
+	config.SetDefault("operation_types.SAQUE", "-")
+	config.SetDefault("operation_types.PAGAMENTO", "+")
+
 	config.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
 	config.AutomaticEnv()
 }
