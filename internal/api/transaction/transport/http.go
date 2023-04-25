@@ -22,13 +22,17 @@ func (h *HTTP) Create(c echo.Context) error {
 	var transactionReq dto.TransactionRequest
 
 	if err := c.Bind(&transactionReq); err != nil {
-		return c.JSON(http.StatusBadRequest, "request body is invalid")
+		return echo.NewHTTPError(http.StatusBadRequest, "request body is invalid")
+	}
+
+	if err := c.Validate(transactionReq); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	accResponse, err := h.service.Create(transactionReq)
 
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "error to create transaction")
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusCreated, accResponse)

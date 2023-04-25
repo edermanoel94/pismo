@@ -3,7 +3,9 @@ package server
 import (
 	"context"
 	"github.com/edermanoel94/pismo/internal/infra/config"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,10 +18,13 @@ func New() *echo.Echo {
 	e := echo.New()
 
 	e.Use(
-	//middleware.Logger(),
-	//middleware.Recover(),
-	//middleware.CORS(),
+		middleware.Logger(),
+		middleware.Recover(),
+		middleware.CORS(),
+		middleware.RequestID(),
 	)
+
+	e.Validator = &CustomValidator{validator: validator.New()}
 
 	e.GET("/health", healthCheck)
 

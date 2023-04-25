@@ -26,17 +26,21 @@ func (h *HTTP) Create(c echo.Context) error {
 	var accReq dto.AccountRequest
 
 	if err := c.Bind(&accReq); err != nil {
-		return c.JSON(http.StatusBadRequest, "request body is invalid")
+		return echo.NewHTTPError(http.StatusBadRequest, "request body is invalid")
+	}
+
+	if err := c.Validate(accReq); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	accResponse, err := h.service.Create(accReq)
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			return c.JSON(http.StatusConflict, "duplicated key not allowed")
+			return echo.NewHTTPError(http.StatusConflict, "duplicated key not allowed")
 		}
 
-		return c.JSON(http.StatusInternalServerError, "error to create account")
+		return echo.NewHTTPError(http.StatusInternalServerError, "error to create account")
 	}
 
 	return c.JSON(http.StatusCreated, accResponse)
@@ -48,16 +52,16 @@ func (h *HTTP) View(c echo.Context) error {
 	id, err := strconv.Atoi(paramId)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "id cannot be alpha numeric")
+		return echo.NewHTTPError(http.StatusBadRequest, "id cannot be alpha numeric")
 	}
 
 	accRes, err := h.service.Get(id)
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return c.JSON(http.StatusNotFound, "record not found")
+			return echo.NewHTTPError(http.StatusNotFound, "record not found")
 		}
-		return c.JSON(http.StatusInternalServerError, "error get account")
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, accRes)
