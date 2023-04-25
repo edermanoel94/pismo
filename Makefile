@@ -11,6 +11,9 @@ run:
 debug:
 	dlv debug ./cmd/pismo
 
+linter:
+	golangci-lint run -v
+
 test:
 	go install github.com/mfridman/tparse@latest | go mod tidy
 	go test -json -cover ./... | tparse -all -pass
