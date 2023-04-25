@@ -41,7 +41,7 @@ func Start(e *echo.Echo) {
 
 	go func() {
 		if err := e.StartServer(s); err != nil {
-			e.Logger.Panic(err)
+			e.Logger.Fatal(err)
 		}
 	}()
 
@@ -51,7 +51,7 @@ func Start(e *echo.Echo) {
 
 	<-quit
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 
 	defer cancel()
 

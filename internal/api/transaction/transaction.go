@@ -4,6 +4,7 @@ import (
 	"github.com/edermanoel94/pismo/internal/api/transaction/data"
 	"github.com/edermanoel94/pismo/internal/api/transaction/dto"
 	"github.com/edermanoel94/pismo/internal/domain"
+	"github.com/sirupsen/logrus"
 )
 
 type Transaction struct {
@@ -25,6 +26,9 @@ func (a *Transaction) Create(request dto.TransactionRequest) (dto.TransactionRes
 	})
 
 	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"request": request,
+		}).Error(err)
 		return dto.TransactionResponse{}, err
 	}
 
