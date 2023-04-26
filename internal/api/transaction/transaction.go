@@ -27,9 +27,7 @@ func (a *Transaction) Create(request dto.TransactionRequest) (dto.TransactionRes
 	operationTypesIndexed, err := a.operationTypeService.FindAll()
 
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"request": request,
-		}).Error(err)
+		logrus.WithFields(logrus.Fields{"request": request}).Error(err)
 		return dto.TransactionResponse{}, err
 	}
 
@@ -42,17 +40,21 @@ func (a *Transaction) Create(request dto.TransactionRequest) (dto.TransactionRes
 	}
 
 	if operationtype.IsBalanceNegative(operationTypesIndexed[request.OperationTypeId]) {
-		t.Amount = -1 * request.Amount
+		t.Amount = swapSign(request.Amount)
 	}
 
 	transaction, err := a.repository.Create(t)
 
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"request": request,
-		}).Error(err)
+		logrus.WithFields(logrus.Fields{"request": request}).Error(err)
 		return dto.TransactionResponse{}, err
 	}
+
+	logrus.WithFields(logrus.Fields{
+		"transactionId": transaction.ID,
+		"amount":        transaction.Amount,
+		"accountId":     transaction.AccountID,
+	}).Info("Transaction create with success")
 
 	return dto.TransactionResponse{
 		Amount: transaction.Amount,
@@ -61,6 +63,10 @@ func (a *Transaction) Create(request dto.TransactionRequest) (dto.TransactionRes
 
 func changeAmountSignToPositive(request *dto.TransactionRequest) {
 	if math.Signbit(request.Amount) {
-		request.Amount = -1 * request.Amount
+		request.Amount = swapSign(request.Amount)
 	}
+}
+
+func swapSign(v float64) float64 {
+	return -1 * v
 }
