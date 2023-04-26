@@ -17,4 +17,4 @@ services:
     environment:
       POSTGRES_PASSWORD: pismo
     volumes:
-      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./resources/sql/init.sql:/docker-entrypoint-initdb.d/init.sql

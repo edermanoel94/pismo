@@ -65,5 +65,9 @@ The `build/package` folder contains the Dockerfile used for building the contain
 
 The `cmd/pismo` folder stores the `main.go` file.
 
+The `resources/postman` folder contains all the resources to access each endpoint.
+
+The `resources/sql` folder contains all the sql code that create database.
+
 
 
