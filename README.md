@@ -1,5 +1,7 @@
 # Desafio Pismo
 
+[![Test](https://github.com/edermanoel94/pismo/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/edermanoel94/pismo/actions/workflows/go.yml)
+
 ## Requirements
 
 - Go 1.19++
