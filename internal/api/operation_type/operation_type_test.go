@@ -123,23 +123,28 @@ func operationTypesIndexedFixtures(ops []domain.OperationType) Indexed {
 	return indexes
 }
 
-func TestIsBalanceNegative(t *testing.T) {
+func TestIsSettlement(t *testing.T) {
 
 	config.Init()
 
 	testCases := []struct {
-		desc              string
-		operationTypeName string
-		expectedResult    bool
+		desc            string
+		operationTypeId int
+		expectedResult  bool
 	}{
 		{
-			"should be a negative balance",
-			"saque",
+			"when operationType is SAQUE",
+			2,
 			true,
 		},
 		{
-			"should be a positive balance",
-			"pagamento",
+			"when operationType is PAGAMENTO",
+			1,
+			false,
+		},
+		{
+			"when operationType is UNKNOWN",
+			1321,
 			false,
 		},
 	}
@@ -147,7 +152,48 @@ func TestIsBalanceNegative(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 
-			assert.Equal(t, tc.expectedResult, IsBalanceNegative(tc.operationTypeName))
+			operationTypesIndexed := Indexed{
+				1: "PAGAMENTO",
+				2: "SAQUE",
+				3: "LIMITE_DE_CREDITO",
+			}
+
+			assert.Equal(t, tc.expectedResult, operationTypesIndexed.IsSettlement(tc.operationTypeId))
+		})
+	}
+}
+
+func TestIndexed_IsCreditLimit(t *testing.T) {
+
+	config.Init()
+
+	testCases := []struct {
+		desc            string
+		operationTypeId int
+		expectedResult  bool
+	}{
+		{
+			"when operationType is CREDIT_LIMIT",
+			3,
+			true,
+		},
+		{
+			"when operationType is SAQUE",
+			2,
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+
+			operationTypesIndexed := Indexed{
+				1: "PAGAMENTO",
+				2: "SAQUE",
+				3: "LIMITE_DE_CREDITO",
+			}
+
+			assert.Equal(t, tc.expectedResult, operationTypesIndexed.IsCreditLimit(tc.operationTypeId))
 		})
 	}
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"regexp"
 	"testing"
 )
 
@@ -18,8 +17,8 @@ type RepositorySuite struct {
 	DB   *gorm.DB
 	mock sqlmock.Sqlmock
 
-	repo *Repository
-	acc  *domain.Account
+	repo    *Repository
+	account *domain.Account
 }
 
 func TestSuite(t *testing.T) {
@@ -29,7 +28,7 @@ func TestSuite(t *testing.T) {
 func (r *RepositorySuite) SetupSuite() {
 	var err error
 
-	r.conn, r.mock, err = sqlmock.New()
+	r.conn, r.mock, err = sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 	assert.NoError(r.T(), err)
 
@@ -48,8 +47,9 @@ func (r *RepositorySuite) SetupSuite() {
 
 	assert.IsType(r.T(), &Repository{}, r.repo)
 
-	r.acc = &domain.Account{
+	r.account = &domain.Account{
 		DocumentNumber: "12345678912",
+		Balance:        1000.00,
 		ID:             1,
 	}
 }
@@ -60,39 +60,64 @@ func (r *RepositorySuite) AfterTest(_, _ string) {
 
 func (r *RepositorySuite) TestCreate() {
 	r.mock.ExpectBegin()
-	r.mock.ExpectQuery(
-		regexp.QuoteMeta(`INSERT INTO "accounts" ("document_number","id") VALUES ($1,$2)`)).
+	r.mock.ExpectQuery(`INSERT INTO "accounts" ("document_number","balance","id") VALUES ($1,$2,$3) RETURNING "id"`).
 		WithArgs(
-			r.acc.DocumentNumber,
-			r.acc.ID,
+			r.account.DocumentNumber,
+			r.account.Balance,
+			r.account.ID,
 		).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 
 	r.mock.ExpectCommit()
 
-	acc, err := r.repo.Create(*r.acc)
+	acc, err := r.repo.Create(*r.account)
 
 	assert.NoError(r.T(), err)
 
-	assert.Equal(r.T(), *r.acc, acc)
+	assert.Equal(r.T(), *r.account, acc)
 }
 
 func (r *RepositorySuite) TestFindById() {
 
-	rows := sqlmock.NewRows([]string{"id", "document_number"}).
+	rows := sqlmock.NewRows([]string{"id", "balance", "document_number"}).
 		AddRow(
-			r.acc.ID,
-			r.acc.DocumentNumber,
+			r.account.ID,
+			r.account.Balance,
+			r.account.DocumentNumber,
 		)
 
-	r.mock.ExpectQuery(
-		regexp.QuoteMeta(`SELECT * FROM "accounts" WHERE "accounts"."id" = $1`)).
+	r.mock.ExpectQuery(`SELECT * FROM "accounts" WHERE "accounts"."id" = $1 ORDER BY "accounts"."id" LIMIT 1`).
 		WithArgs().
 		WillReturnRows(rows)
 
-	acc, err := r.repo.FindById(int(r.acc.ID))
+	acc, err := r.repo.FindById(int(r.account.ID))
 
 	assert.NoError(r.T(), err)
 
-	assert.Equal(r.T(), *r.acc, acc)
+	assert.Equal(r.T(), *r.account, acc)
+}
+
+func (r *RepositorySuite) TestUpdateBalance() {
+
+	expectedBalance := 1000.00
+
+	r.mock.ExpectBegin()
+	r.mock.ExpectExec(`UPDATE "accounts" SET "balance"=$1 WHERE "id" = $2`).
+		WithArgs(
+			expectedBalance,
+			r.account.ID,
+		).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	r.mock.ExpectCommit()
+
+	acc, err := r.repo.UpdateBalance(domain.Account{
+		ID:      r.account.ID,
+		Balance: r.account.Balance,
+	})
+
+	assert.NoError(r.T(), err)
+
+	assert.Equal(r.T(), r.account.Balance, acc.Balance)
+	assert.Equal(r.T(), r.account.ID, acc.ID)
 }

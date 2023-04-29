@@ -30,6 +30,11 @@ func (m *mockAccountService) Create(request dto.AccountRequest) (dto.AccountResp
 	return args.Get(0).(dto.AccountResponse), args.Error(1)
 }
 
+func (m *mockAccountService) UpdateBalance(id int, newBalance float64) (dto.AccountResponse, error) {
+	args := m.Called(id, newBalance)
+	return args.Get(0).(dto.AccountResponse), args.Error(1)
+}
+
 func TestHTTP_View(t *testing.T) {
 
 	testCases := []struct {

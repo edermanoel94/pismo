@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"errors"
 	"github.com/edermanoel94/pismo/internal/api/transaction"
 	"github.com/edermanoel94/pismo/internal/api/transaction/dto"
 	"github.com/labstack/echo/v4"
@@ -32,6 +33,11 @@ func (h *HTTP) Create(c echo.Context) error {
 	accResponse, err := h.service.Create(transactionReq)
 
 	if err != nil {
+
+		if errors.Is(err, transaction.ErrNoLimitCredit) {
+			return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+		}
+
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 

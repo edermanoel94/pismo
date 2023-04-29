@@ -4,6 +4,7 @@ import (
 	"github.com/akyoto/cache"
 	"github.com/edermanoel94/pismo/internal/api/operation_type/data"
 	"github.com/edermanoel94/pismo/internal/infra/config"
+	"strings"
 	"time"
 )
 
@@ -25,9 +26,16 @@ func New(repository data.OperationTypeRepository) *OperationType {
 
 type Indexed map[int]string
 
-func IsBalanceNegative(operationTypeName string) bool {
-	operationTypesMap := config.Config().GetStringMapString("operation_types")
-	return operationTypesMap[operationTypeName] == "-"
+func (i Indexed) IsCreditLimit(operationTypeId int) bool {
+	return strings.EqualFold(i[operationTypeId], "limite_de_credito")
+}
+
+func (i Indexed) IsSettlement(operationTypeId int) bool {
+	if operationTypeName, ok := i[operationTypeId]; ok {
+		operationTypesMap := config.Config().GetStringMapString("operation_types")
+		return operationTypesMap[strings.ToLower(operationTypeName)] == "-"
+	}
+	return false
 }
 
 func (o *OperationType) FindAll() (Indexed, error) {

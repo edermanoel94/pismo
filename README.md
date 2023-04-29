@@ -55,6 +55,7 @@ operation_types:
   COMPRA_PARCELADA: "-"
   SAQUE: "-"
   PAGAMENTO: "+"
+  LIMITE_DE_CREDITO: "+"
 ```
 
 ### Folders Structure

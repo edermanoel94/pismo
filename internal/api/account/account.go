@@ -33,6 +33,7 @@ func (a *Account) Get(id int) (dto.AccountResponse, error) {
 	return dto.AccountResponse{
 		ID:             int(acc.ID),
 		DocumentNumber: acc.DocumentNumber,
+		Balance:        acc.Balance,
 	}, nil
 }
 
@@ -55,5 +56,26 @@ func (a *Account) Create(request dto.AccountRequest) (dto.AccountResponse, error
 
 	return dto.AccountResponse{
 		DocumentNumber: acc.DocumentNumber,
+	}, nil
+}
+
+func (a *Account) UpdateBalance(id int, newBalance float64) (dto.AccountResponse, error) {
+
+	account, err := a.repository.UpdateBalance(domain.Account{
+		ID:      uint(id),
+		Balance: newBalance,
+	})
+
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"id": id,
+		}).Error(err)
+		return dto.AccountResponse{}, err
+	}
+
+	return dto.AccountResponse{
+		ID:             int(account.ID),
+		Balance:        account.Balance,
+		DocumentNumber: account.DocumentNumber,
 	}, nil
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/edermanoel94/pismo/internal/api/transaction"
 	"github.com/edermanoel94/pismo/internal/api/transaction/dto"
 	"github.com/edermanoel94/pismo/internal/infra/server"
 	"github.com/stretchr/testify/assert"
@@ -44,6 +45,18 @@ func TestHTTP_Create(t *testing.T) {
 			nil,
 			dto.TransactionResponse{},
 			201,
+		},
+		{
+			"account have no balance for this transaction",
+			`{"account_id":1,"operation_type_id":4,"amount":123.45}`,
+			dto.TransactionRequest{
+				AccountId:       1,
+				OperationTypeId: 4,
+				Amount:          123.45,
+			},
+			transaction.ErrNoLimitCredit,
+			dto.TransactionResponse{},
+			422,
 		},
 		{
 			"error to create transaction",

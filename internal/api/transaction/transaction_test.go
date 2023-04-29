@@ -1,7 +1,7 @@
 package transaction
 
 import (
-	"errors"
+	accdto "github.com/edermanoel94/pismo/internal/api/account/dto"
 	operationtype "github.com/edermanoel94/pismo/internal/api/operation_type"
 	"github.com/edermanoel94/pismo/internal/api/transaction/dto"
 	"github.com/edermanoel94/pismo/internal/domain"
@@ -29,113 +29,212 @@ func (m *mockOperationTypeService) FindAll() (operationtype.Indexed, error) {
 	return args.Get(0).(operationtype.Indexed), args.Error(1)
 }
 
+type mockAccountService struct {
+	mock.Mock
+}
+
+func (m *mockAccountService) Create(request accdto.AccountRequest) (accdto.AccountResponse, error) {
+	args := m.Called(request)
+	return args.Get(0).(accdto.AccountResponse), args.Error(1)
+}
+
+func (m *mockAccountService) Get(id int) (accdto.AccountResponse, error) {
+	args := m.Called(id)
+	return args.Get(0).(accdto.AccountResponse), args.Error(1)
+}
+
+func (m *mockAccountService) UpdateBalance(id int, newBalance float64) (accdto.AccountResponse, error) {
+	args := m.Called(id, newBalance)
+	return args.Get(0).(accdto.AccountResponse), args.Error(1)
+}
+
 func TestTransaction_Create(t *testing.T) {
 
 	config.Init()
 
-	testCases := []struct {
-		desc           string
-		transactionReq dto.TransactionRequest
+	t.Run("create a transaction with operation_type \"PAGAMENTO\"", func(t *testing.T) {
 
-		operationTypeExpectedIndexes operationtype.Indexed
-		operationTypeExpectedErr     error
+		mockTransactionRepository := new(mockTransactionRepository)
+		mockOperationTypeService := new(mockOperationTypeService)
+		mockAccountService := new(mockAccountService)
 
-		transactionInput  domain.Transaction
-		transactionOutput domain.Transaction
-		expectedErr       error
-	}{
-		{
-			"create a transaction with operation_type \"PAGAMENTO\" and amount with positive sign",
-			dto.TransactionRequest{
-				AccountId:       1,
-				OperationTypeId: 1,
-				Amount:          123.45,
-			},
-			map[int]string{
-				1: "pagamento",
-				2: "saque",
-			},
-			nil,
-			domain.Transaction{
-				Amount:          123.45,
-				AccountID:       1,
-				OperationTypeID: 1,
-			},
-			domain.Transaction{
-				Amount: 123.45,
-			},
-			nil,
-		},
-		{
-			"create a transaction with operation_type \"SAQUE\" and amount with negative sign",
-			dto.TransactionRequest{
-				AccountId:       1,
-				OperationTypeId: 2,
-				Amount:          -123.45,
-			},
-			map[int]string{
-				1: "pagamento",
-				2: "saque",
-			},
-			nil,
-			domain.Transaction{
-				Amount:          -123.45,
-				AccountID:       1,
-				OperationTypeID: 2,
-			},
-			domain.Transaction{
-				Amount: -123.45,
-			},
-			nil,
-		},
-		{
-			"error to create a transaction",
-			dto.TransactionRequest{
-				AccountId:       1,
-				OperationTypeId: 1,
-				Amount:          123.45,
-			},
-			map[int]string{
-				1: "pagamento",
-			},
-			nil,
-			domain.Transaction{
-				Amount:          123.45,
-				AccountID:       1,
-				OperationTypeID: 1,
-			},
-			domain.Transaction{},
-			errors.New("error to create a transaction"),
-		},
-	}
+		transactionRequest := dto.TransactionRequest{
+			AccountId:       1,
+			OperationTypeId: 1,
+			Amount:          123.45,
+		}
 
-	for _, tc := range testCases {
+		transactionInput := domain.Transaction{
+			Amount:          123.45,
+			AccountID:       1,
+			OperationTypeID: 1,
+		}
+		transactionOutput := domain.Transaction{
+			Amount: 123.45,
+		}
 
-		t.Run(tc.desc, func(t *testing.T) {
+		accountResponse := accdto.AccountResponse{}
 
-			mockTransactionRepository := new(mockTransactionRepository)
-			mockOperationTypeService := new(mockOperationTypeService)
+		mockTransactionRepository.On("Create", transactionInput).
+			Return(transactionOutput, nil)
 
-			mockTransactionRepository.On("Create", tc.transactionInput).
-				Return(tc.transactionOutput, tc.expectedErr)
+		mockAccountService.On("Get", 1).
+			Return(accountResponse, nil)
 
-			mockOperationTypeService.On("FindAll").Return(tc.operationTypeExpectedIndexes, tc.operationTypeExpectedErr)
+		mockOperationTypeService.On("FindAll").Return(operationTypeExpectedIndexes(), nil)
 
-			transactionService := Transaction{
-				repository:           mockTransactionRepository,
-				operationTypeService: mockOperationTypeService,
-			}
+		transactionService := Transaction{
+			repository:           mockTransactionRepository,
+			accountService:       mockAccountService,
+			operationTypeService: mockOperationTypeService,
+		}
 
-			transactionResp, err := transactionService.Create(tc.transactionReq)
+		transactionResp, err := transactionService.Create(transactionRequest)
 
-			if err != nil {
-				assert.Equal(t, tc.expectedErr, err)
-			} else {
-				assert.Equal(t, tc.transactionOutput.Amount, transactionResp.Amount)
-			}
+		if err != nil {
+			t.Fatal(err)
+		}
 
-			mockTransactionRepository.AssertExpectations(t)
-			mockOperationTypeService.AssertExpectations(t)
-		})
+		assert.Equal(t, transactionOutput.Amount, transactionResp.Amount)
+
+		mockAccountService.AssertNumberOfCalls(t, "UpdateBalance", 0)
+
+		mockTransactionRepository.AssertExpectations(t)
+		mockOperationTypeService.AssertExpectations(t)
+		mockAccountService.AssertExpectations(t)
+	})
+
+	t.Run("create a transaction with operation_type \"SAQUE\"", func(t *testing.T) {
+
+		mockTransactionRepository := new(mockTransactionRepository)
+		mockOperationTypeService := new(mockOperationTypeService)
+		mockAccountService := new(mockAccountService)
+
+		transactionRequest := dto.TransactionRequest{
+			AccountId:       1,
+			OperationTypeId: 2,
+			Amount:          123.45,
+		}
+
+		transactionInput := domain.Transaction{
+			Amount:          -123.45,
+			AccountID:       1,
+			OperationTypeID: 2,
+		}
+		transactionOutput := domain.Transaction{
+			Amount: -123.45,
+		}
+
+		accountResponseGetMock := accdto.AccountResponse{
+			ID:      1,
+			Balance: 1000,
+		}
+
+		accountResponseUpdateBalanceMock := accdto.AccountResponse{
+			ID:      1,
+			Balance: 1000 - 123.45,
+		}
+
+		mockOperationTypeService.On("FindAll").Return(operationTypeExpectedIndexes(), nil)
+
+		mockAccountService.On("Get", 1).
+			Return(accountResponseGetMock, nil)
+
+		mockAccountService.On("UpdateBalance", 1, 876.55).
+			Return(accountResponseUpdateBalanceMock, nil)
+
+		mockTransactionRepository.On("Create", transactionInput).
+			Return(transactionOutput, nil)
+
+		transactionService := Transaction{
+			repository:           mockTransactionRepository,
+			accountService:       mockAccountService,
+			operationTypeService: mockOperationTypeService,
+		}
+
+		transactionResp, err := transactionService.Create(transactionRequest)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Equal(t, transactionOutput.Amount, transactionResp.Amount)
+
+		mockAccountService.AssertNumberOfCalls(t, "UpdateBalance", 1)
+
+		mockOperationTypeService.AssertExpectations(t)
+		mockAccountService.AssertExpectations(t)
+		mockTransactionRepository.AssertExpectations(t)
+	})
+
+	t.Run("create a transaction with operation_type \"LIMITE_DE_CREDITO\"", func(t *testing.T) {
+
+		mockTransactionRepository := new(mockTransactionRepository)
+		mockOperationTypeService := new(mockOperationTypeService)
+		mockAccountService := new(mockAccountService)
+
+		transactionRequest := dto.TransactionRequest{
+			AccountId:       1,
+			OperationTypeId: 3,
+			Amount:          1000,
+		}
+
+		transactionInput := domain.Transaction{
+			Amount:          1000,
+			AccountID:       1,
+			OperationTypeID: 3,
+		}
+		transactionOutput := domain.Transaction{
+			Amount: 1000,
+		}
+
+		accountResponseGetMock := accdto.AccountResponse{
+			ID:      1,
+			Balance: 1000,
+		}
+
+		accountResponseUpdateBalanceMock := accdto.AccountResponse{
+			ID:      1,
+			Balance: 1000,
+		}
+
+		mockOperationTypeService.On("FindAll").Return(operationTypeExpectedIndexes(), nil)
+
+		mockAccountService.On("Get", 1).
+			Return(accountResponseGetMock, nil)
+
+		mockAccountService.On("UpdateBalance", 1, 1000.00).
+			Return(accountResponseUpdateBalanceMock, nil)
+
+		mockTransactionRepository.On("Create", transactionInput).
+			Return(transactionOutput, nil)
+
+		transactionService := Transaction{
+			repository:           mockTransactionRepository,
+			accountService:       mockAccountService,
+			operationTypeService: mockOperationTypeService,
+		}
+
+		transactionResp, err := transactionService.Create(transactionRequest)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Equal(t, transactionOutput.Amount, transactionResp.Amount)
+
+		mockAccountService.AssertNumberOfCalls(t, "UpdateBalance", 1)
+
+		mockOperationTypeService.AssertExpectations(t)
+		mockAccountService.AssertExpectations(t)
+		mockTransactionRepository.AssertExpectations(t)
+	})
+}
+
+func operationTypeExpectedIndexes() operationtype.Indexed {
+	return operationtype.Indexed{
+		1: "pagamento",
+		2: "saque",
+		3: "limite_de_credito",
 	}
 }

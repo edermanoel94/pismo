@@ -44,6 +44,7 @@ func setConfigDefaults() {
 	config.SetDefault("operation_types.COMPRA_PARCELADA", "-")
 	config.SetDefault("operation_types.SAQUE", "-")
 	config.SetDefault("operation_types.PAGAMENTO", "+")
+	config.SetDefault("operation_types.LIMITE_DE_CREDITO", "+")
 
 	config.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
 	config.AutomaticEnv()

@@ -30,7 +30,11 @@ func Start() error {
 	operationTypeService := operationtype.New(operationTypeRepository)
 
 	accountService := account.New(accountRepository)
-	transactionService := transaction.New(transactionRepository, operationTypeService)
+	transactionService := transaction.New(
+		transactionRepository,
+		accountService,
+		operationTypeService,
+	)
 
 	at.NewHTTP(accountService, s)
 	tt.NewHTTP(transactionService, s)

@@ -25,6 +25,11 @@ func (m *mockAccountRepository) Create(acc domain.Account) (domain.Account, erro
 	return args.Get(0).(domain.Account), args.Error(1)
 }
 
+func (m *mockAccountRepository) UpdateBalance(acc domain.Account) (domain.Account, error) {
+	args := m.Called(acc)
+	return args.Get(0).(domain.Account), args.Error(1)
+}
+
 func TestAccount_Create(t *testing.T) {
 
 	testCases := []struct {
@@ -156,4 +161,76 @@ func TestAccount_Get(t *testing.T) {
 			mockAccountRepository.AssertExpectations(t)
 		})
 	}
+}
+
+func TestAccount_UpdateBalance(t *testing.T) {
+
+	testCases := []struct {
+		desc            string
+		idInput         int
+		newBalanceInput float64
+		accountInput    domain.Account
+		accountOutput   domain.Account
+		errOutput       error
+		expectedErr     error
+	}{
+		{
+			"update balance",
+			1,
+			0,
+			domain.Account{
+				ID:      1,
+				Balance: 100,
+			},
+			domain.Account{
+				ID:      1,
+				Balance: 50,
+			},
+			nil,
+			nil,
+		},
+		{
+			"error to update balance",
+			1,
+			0,
+			domain.Account{
+				ID:      1,
+				Balance: 100,
+			},
+			domain.Account{
+				ID:             1,
+				Balance:        50,
+				DocumentNumber: "123",
+			},
+			errors.New("cannot update balance"),
+			errors.New("cannot update balance"),
+		},
+	}
+
+	for _, tc := range testCases {
+
+		t.Run(tc.desc, func(t *testing.T) {
+
+			mockAccountRepository := new(mockAccountRepository)
+
+			mockAccountRepository.On("UpdateBalance", tc.accountInput).Return(tc.accountOutput, tc.errOutput)
+
+			accountService := Account{
+				repository: mockAccountRepository,
+			}
+
+			accountResponse, err := accountService.UpdateBalance(1, 100)
+
+			if err != nil {
+				assert.Equal(t, tc.expectedErr, err)
+			} else {
+				assert.Equal(t, tc.accountOutput.ID, uint(accountResponse.ID))
+				assert.Equal(t, tc.accountOutput.Balance, accountResponse.Balance)
+				assert.Equal(t, tc.accountOutput.DocumentNumber, accountResponse.DocumentNumber)
+			}
+
+			mockAccountRepository.AssertExpectations(t)
+		})
+	}
+
 }
